@@ -183,11 +183,35 @@
     line-height: 1.5;
   }
   #assetWarning b { color: #ffd48a; }
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+  color:white;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-top:2px;
+}
 </style>
 </head>
 <body>
 
   <div id="app">
+          <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
 
     <!-- Jam digital real-time -->
     <div id="clockPanel">
@@ -212,7 +236,43 @@
 
   </div>
 
-  <script>
+  <script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const userId = crypto.randomUUID();
+const userRef = ref(db, "online/" + userId);
+
+set(userRef, true);
+onDisconnect(userRef).remove();
+
+onValue(ref(db, "online"), (snapshot) => {
+    const data = snapshot.val() || {};
+    document.getElementById("onlineCount").textContent =
+        Object.keys(data).length;
+});
+    
   (function () {
     "use strict";
 

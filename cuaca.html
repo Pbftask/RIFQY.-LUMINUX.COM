@@ -531,6 +531,27 @@ footer .foot-links span{ font-family:var(--font-mono); }
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
 }
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
 </style>
 </head>
 <body>
@@ -540,6 +561,9 @@ footer .foot-links span{ font-family:var(--font-mono); }
 
 <!-- ===================== HEADER ===================== -->
 <header class="app-header">
+  <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
   <div class="header-inner">
     <div class="brand">
     </div>
@@ -623,10 +647,13 @@ footer .foot-links span{ font-family:var(--font-mono); }
 </footer>
 
 <script type="module">
+
 /* =========================================================================
    BAGIAN 0 — KONFIGURASI FIREBASE
    Ganti nilai di bawah ini dengan konfigurasi proyek Firebase Anda sendiri.
    ========================================================================= */
+
+  
 const firebaseConfig = {
   apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
   authDomain: "puki-678bf.firebaseapp.com",
@@ -639,22 +666,44 @@ const firebaseConfig = {
 /* =========================================================================
    BAGIAN 1 — IMPORT FIREBASE (ES MODULE, versi terbaru via CDN)
    ========================================================================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+
 import {
   getFirestore,
   collection,
   onSnapshot,
   query,
   orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
-let app, db;
+import {
+  getDatabase,
+  ref,
+ set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+let app, db, rtdb;
+
 try{
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
+  rtdb = getDatabase(app);
 }catch(err){
   console.warn("Firebase belum dikonfigurasi:", err);
 }
+
+const onlineRef = ref(rtdb, "online/" + crypto.randomUUID());
+
+set(onlineRef, true);
+onDisconnect(onlineRef).remove();
+
+onValue(ref(rtdb, "online"), (snapshot) => {
+    document.getElementById("onlineCount").textContent =
+        snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+});
 
 /* =========================================================================
    BAGIAN 2 — STATE APLIKASI
@@ -729,7 +778,6 @@ function randInt(rand, min, max){
 }
 
 
-let serverHourSeed = "";
 /* =========================================================================
    BAGIAN 5 — GENERATOR DATA CUACA DARI NAMA NEGARA
    ========================================================================= */
