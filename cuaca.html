@@ -1282,7 +1282,7 @@ function startRealtimeListener(){
       renderGrid();
     }, (error)=>{
       console.error("Gagal memuat data Firestore:", error);
-      showToast("Gagal memuat data. Periksa koneksi / konfigurasi Firebase.");
+      showToast("Gagal memuat data. Periksa koneksi / konfigurasi Database");
       state.loaded = true;
       renderGrid();
     });
