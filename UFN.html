@@ -882,11 +882,31 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
   border-radius: 20px;
   width: 50px;
   border:1px solid yellow;
-  dusplay:flex;
 }
 .enve a{
     color:white;
     margin-left:15px;
+}
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
 }
 </style>
 </head>
@@ -925,6 +945,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
           </svg>
         </button>
       </div>
+      <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
       <div class="lemari">
        <div class="enve">
         <a href="UNF-donwload.html" class="fa-solid fa-clock"></a>
@@ -1046,8 +1069,16 @@ document.addEventListener("click", function(e){
       onSnapshot,
       query,
       orderBy,
-      serverTimestamp
+      serverTimestamp,
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+    getDatabase,
+    ref,
+    set,
+    onValue,
+    onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     /* =====================================================================
        1. KONFIGURASI FIREBASE
@@ -1065,10 +1096,25 @@ const firebaseConfig = {
 };
 
     // Inisialisasi Firebase & Firestore
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const countriesRef = collection(db, "countries");
+const app = initializeApp(firebaseConfig);
 
+const firestore = getFirestore(app);
+const realtimeDb = getDatabase(app);
+
+const userId = crypto.randomUUID();
+
+const userRef = ref(realtimeDb, "online/" + userId);
+
+set(userRef, true);
+
+onDisconnect(userRef).remove();
+
+onValue(ref(realtimeDb, "online"), (snapshot) => {
+    const data = snapshot.val() || {};
+    document.getElementById("onlineCount").textContent =
+        Object.keys(data).length;
+});
+const countriesRef = collection(firestore, "countries");
     /* =====================================================================
        2. STATE APLIKASI (MODUL STATE)
        ===================================================================== */
