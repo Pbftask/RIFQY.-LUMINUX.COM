@@ -420,6 +420,10 @@ footer b{ color:var(--ink); }
 }
 nav.main-nav.mobile-open{ display:flex; position:absolute; top:100%; left:0; right:0; background:var(--surface); flex-direction:column; padding:10px 16px 16px; border-bottom:1px solid var(--line); box-shadow:var(--shadow); }
 nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radius:8px; }
+
+.gok{
+  background:red;
+}
 </style>
 </head>
 <body>
@@ -443,6 +447,7 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <input type="text" id="searchInput" placeholder="Cari berita...">
       </div>
       <button class="icon-btn" id="themeToggle" title="Ganti tema"><i class="fa-solid fa-moon"></i></button>
+
       <button class="icon-btn hamburger" id="hamburgerBtn" title="Menu"><i class="fa-solid fa-bars"></i></button>
     </div>
   </div>
@@ -539,6 +544,12 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <input type="url" id="fImage" required placeholder="https://contoh.com/gambar.jpg">
         <div class="preview-img" id="imgPreview">Pratinjau gambar akan muncul di sini</div>
       </div>
+      
+     <div onclick="window.location.href='https://imgbb.com/'" class="btn-primary">
+       Convert URL
+     </div>
+      
+
       <div class="field">
         <label>Nama Penulis</label>
         <input type="text" id="fAuthor" required placeholder="Nama penulis">
