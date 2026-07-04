@@ -806,13 +806,13 @@ const r = rand();
 
 let aqi;
 
-if (r < 0.50) {
+if (r < 0.70) {
   aqi = randInt(rand, 8, 50);
-} else if (r < 0.75) {
-  aqi = randInt(rand, 51, 100);
 } else if (r < 0.90) {
+  aqi = randInt(rand, 51, 100);
+} else if (r < 0.97) {
   aqi = randInt(rand, 101, 150);
-} else if (r < 0.98) {
+} else if (r < 0.99) {
   aqi = randInt(rand, 151, 200);
 } else {
   aqi = randInt(rand, 201, 320);
