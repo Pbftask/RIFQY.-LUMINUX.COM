@@ -796,13 +796,29 @@ const seed = hashString(
   const pool = conditionPoolForTemp(temp);
   const conditionKey = pool[Math.floor(rand() * pool.length) % pool.length];
 
-  const humidity   = randInt(rand, 20, 100);
-  const windSpeed  = Math.round(randRange(rand, 2, 120));
-  const pressure   = randInt(rand, 950, 1050);
-  const uv         = Math.min(11, Math.max(0, Math.round(randRange(rand, 0, 11))));
-  const visibility = Math.round(randRange(rand, 0.5, 20) * 10) / 10;
-  const aqi         = randInt(rand, 8, 320);
-  const rainChance  = randInt(rand, 0, 100);
+const humidity   = randInt(rand, 20, 100);
+const windSpeed  = Math.round(randRange(rand, 2, 120));
+const pressure   = randInt(rand, 950, 1050);
+const uv         = Math.min(11, Math.max(0, Math.round(randRange(rand, 0, 11))));
+const visibility = Math.round(randRange(rand, 0.5, 20) * 10) / 10;
+
+const r = rand();
+
+let aqi;
+
+if (r < 0.50) {
+  aqi = randInt(rand, 8, 50);
+} else if (r < 0.75) {
+  aqi = randInt(rand, 51, 100);
+} else if (r < 0.90) {
+  aqi = randInt(rand, 101, 150);
+} else if (r < 0.98) {
+  aqi = randInt(rand, 151, 200);
+} else {
+  aqi = randInt(rand, 201, 320);
+}
+
+const rainChance = randInt(rand, 0, 100);
 
   // dew point sederhana berdasarkan suhu & kelembapan (perkiraan Magnus)
   const dewPoint = Math.round(temp - ((100 - humidity) / 5));
