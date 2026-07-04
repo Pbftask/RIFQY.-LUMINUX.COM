@@ -353,9 +353,84 @@
 
   /* svg icon helper */
   svg{ display:block; }
+
+  /* ===========================
+   LOADING SCREEN
+=========================== */
+
+#loading-screen{
+    position:fixed;
+    inset:0;
+    background:#111827;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:999999;
+    transition:opacity .5s ease;
+    pointer-events:all;
+}
+
+#loading-screen.hide{
+    opacity:0;
+    visibility:hidden;
+}
+
+.loading-box{
+    text-align:center;
+    color:white;
+}
+
+.spinner{
+    width:70px;
+    height:70px;
+    border:6px solid rgba(255,255,255,.2);
+    border-top:6px solid #4CAF50;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    margin:auto;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+.loading-title{
+    margin-top:20px;
+    font-size:24px;
+    font-weight:bold;
+}
+
+.loading-text{
+    margin-top:10px;
+    color:#d0d0d0;
+    font-size:15px;
+}
+  
 </style>
 </head>
 <body>
+
+  <!-- Loading -->
+<div id="loading-screen">
+    <div class="loading-box">
+        <div class="spinner"></div>
+
+        <div class="loading-title">
+            Menyiapkan Peta
+        </div>
+
+        <div class="loading-text" id="loadingText">
+            Memuat gambar...
+        </div>
+    </div>
+</div>
+
+<!-- Aplikasi -->
+<div id="app">
+    Peta Siap Digunakan
+</div>
 
   <!-- ============================ VIEWPORT PETA ============================ -->
   <div id="viewport">
@@ -440,6 +515,48 @@
        aset/logo/data Google Maps). Ganti firebaseConfig sesuai proyek Anda.
        ===================================================================== -->
   <script type="module">
+
+const loading = document.getElementById("loading-screen");
+const text = document.getElementById("loadingText");
+
+// Menonaktifkan semua interaksi
+document.body.style.pointerEvents = "none";
+loading.style.pointerEvents = "all";
+
+async function prepareApp(){
+
+    text.textContent = "Memuat gambar...";
+    await delay(1200);
+
+    text.textContent = "Merender peta...";
+    await delay(1200);
+
+    text.textContent = "Memuat marker...";
+    await delay(1200);
+
+    text.textContent = "Menghubungkan database...";
+    await delay(1200);
+
+    text.textContent = "Hampir selesai...";
+    await delay(1000);
+
+    loading.classList.add("hide");
+
+    // Aktifkan kembali interaksi
+    document.body.style.pointerEvents = "auto";
+
+    // Hapus loading setelah animasi selesai
+    setTimeout(()=>{
+        loading.remove();
+    },500);
+}
+
+function delay(ms){
+    return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+prepareApp();
+    
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getFirestore, collection, addDoc, onSnapshot,
