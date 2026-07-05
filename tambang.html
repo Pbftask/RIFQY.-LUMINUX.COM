@@ -444,6 +444,9 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
       </div>
       <div class="country-chip"><span class="dot"></span><span id="topCountryName">-</span></div>
     </div>
+    <div id="workerStatus" class="worker-status">
+     Penambang: Bekerja
+</div>
     <div class="stat-strip">
       <div class="stat-mini"><div class="lbl">Saldo</div><div class="val mono" id="topBalance">0 T</div></div>
       <div class="stat-mini"><div class="lbl">Total Aset</div><div class="val mono" id="topAssets">0 T</div></div>
@@ -580,6 +583,12 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
     <i class="fa-solid fa-gift"></i>
     Klaim Hadiah Harian (200T)
 </button>
+
+    <button onclick="paySalary()" class="btn-primary" id="paySalaryBtn">
+<i class="fa-solid fa-money-bill-wave"></i>
+Bayar Gaji
+</button>
+    
   </div>
 
 </div>
@@ -788,6 +797,8 @@ async function handleLogin(){
     const newUid = newRef.key;
     const now = Date.now();
     const newPlayer = {
+      lastSalary: Date.now(),
+      salaryPaid: true,
       name: name,
       balance: 500,
       inventory: { gold:0, coal:0, nickel:0 },
@@ -957,9 +968,11 @@ function renderTicker(){
    PLAYER DATA LISTENER
    ========================================================= */
 function listenPlayer(){
-  onValue(ref(db, "players/"+uid), (snap)=>{
-    if(!snap.exists()) return;
-    playerData = snap.val();
+onValue(ref(db, "players/" + uid), (snapshot) => {
+
+    playerData = snapshot.val();
+
+    updateWorkerStatus();
     playerData.mines = playerData.mines || {};
     playerData.inventory = playerData.inventory || {gold:0,coal:0,nickel:0};
     for(const key of ["gold","coal","nickel"]){
@@ -988,6 +1001,20 @@ function listenAllPlayers(){
 async function gameTick(){
   if(!playerData) return;
   const now = Date.now();
+
+  // Setiap 24 jam sejak gaji terakhir dibayar, status gaji direset jadi "belum dibayar"
+  if(now - (playerData.lastSalary || 0) >= 86400000){
+    if(playerData.salaryPaid !== false){
+      await update(ref(db,"players/"+uid),{ salaryPaid:false });
+      toast("💼 Waktunya membayar gaji penambang!","error","fa-users");
+    }
+  }
+
+  // Selama gaji belum dibayar, penambang mogok: tidak ada produksi tambang
+  if(playerData.salaryPaid === false){
+    return;
+  }
+
   const updates = {};
   let changed = false;
   for(const key of ["gold","coal","nickel"]){
@@ -1660,6 +1687,80 @@ boot();
     toast("🎁 Hadiah harian +200T berhasil diklaim!", "success", "fa-gift");
 }
   window.claimDailyReward = claimDailyReward;
+
+  function getTaxIncome() {
+    let total = 0;
+
+    for (const key of ["gold","coal","nickel"]) {
+        const level = playerData.mines[key].level;
+        total += 50 + ((level - 1) * 20);
+    }
+
+    return total;
+}
+
+  function getSalaryCost(){
+    if(!playerData || !playerData.mines) return 150;
+    let total = 100; // biaya dasar gaji harian
+    for(const key of ["gold","coal","nickel"]){
+      const level = (playerData.mines[key] && playerData.mines[key].level) || 1;
+      total += (level - 1) * 30;
+    }
+    return total;
+  }
+  window.getSalaryCost = getSalaryCost;
+
+  async function paySalary(){
+
+    if(!playerData) return;
+
+    // Sudah digaji hari ini -> tidak boleh digaji lagi sampai 24 jam berlalu
+    if(playerData.salaryPaid === true){
+        toast("Gaji hari ini sudah dibayar. Penambang sedang bekerja.","info","fa-check");
+        return;
+    }
+
+    const biaya = getSalaryCost();
+
+    if(playerData.balance < biaya){
+        toast("Saldo tidak cukup!","error","fa-xmark");
+        return;
+    }
+
+    await update(ref(db,"players/"+uid),{
+        balance: playerData.balance - biaya,
+        salaryPaid:true,
+        lastSalary:Date.now()
+    });
+
+    toast("✅ Gaji penambang dibayar","success","fa-check");
+}
+
+window.paySalary = paySalary;
+
+
+  function updateWorkerStatus(){
+
+    const el = document.getElementById("workerStatus");
+    const btn = document.getElementById("paySalaryBtn");
+    if(!el || !playerData) return;
+
+    if(playerData.salaryPaid === false){
+        el.innerHTML = " Penambang: Mogok (Bayar Gaji!)";
+    }else{
+        el.innerHTML = " Penambang: Bekerja";
+    }
+
+    if(btn){
+        if(playerData.salaryPaid === false){
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-money-bill-wave"></i> Bayar Gaji';
+        }else{
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Gaji Sudah Dibayar';
+        }
+    }
+}
 </script>
 </body>
 </html>
