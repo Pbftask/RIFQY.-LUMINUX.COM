@@ -424,6 +424,27 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
 .gok{
   background:red;
 }
+
+  .online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
 </style>
 </head>
 <body>
@@ -440,6 +461,7 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
       <div class="logo-mark"><i class="fa-solid fa-bolt"></i></div>
       Kabar<span class="dot">Kini</span>
     </div>
+           
     <nav class="main-nav" id="mainNav"></nav>
     <div class="header-actions">
       <div class="search-box">
@@ -449,12 +471,17 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
       <button class="icon-btn" id="themeToggle" title="Ganti tema"><i class="fa-solid fa-moon"></i></button>
 
       <button class="icon-btn hamburger" id="hamburgerBtn" title="Menu"><i class="fa-solid fa-bars"></i></button>
+      
     </div>
+    
   </div>
   <div class="breaking-bar">
     <div class="breaking-tag"><i class="fa-solid fa-tower-broadcast"></i> Breaking</div>
     <div class="breaking-track"><ul id="breakingList"></ul></div>
   </div>
+  <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
 </header>
 
 <!-- ============================== HOME VIEW ============================== -->
@@ -580,7 +607,8 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
-<script>
+  
+<script type="module">
 /* ================================================================
    KONFIGURASI FIREBASE
    Ganti seluruh nilai di bawah ini dengan konfigurasi proyek
@@ -595,6 +623,32 @@ const firebaseConfig = {
   messagingSenderId: "343647284151",
   appId: "1:343647284151:web:c26e7f5f75235c187a1632"
 };
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const app = initializeApp(firebaseConfig);
+
+const rtdb = getDatabase(app);
+  
 
 let db = null;
 let firebaseReady = false;
@@ -1348,6 +1402,51 @@ renderNav();
 renderSkeletonOrEmpty();
 listenNews();
 handleRoute();
+
+function updateMarkerLabels(){
+
+    markerElements.forEach(el=>{
+
+        const type = el.dataset.type;
+
+        if(type==="provinsi"){
+
+            if(state.scale < 2.5){
+                el.classList.add("hide-label");
+            }else{
+                el.classList.remove("hide-label");
+            }
+
+        }
+
+    });
+
+}
+
+// ================= ONLINE USER =================
+
+let userId = localStorage.getItem("ufn_user_id");
+
+if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("ufn_user_id", userId);
+}
+
+const userRef = ref(rtdb, "online/" + userId);
+
+set(userRef, true);
+
+onDisconnect(userRef).remove();
+
+onValue(ref(rtdb, "online"), (snapshot) => {
+    const jumlah = snapshot.exists()
+        ? Object.keys(snapshot.val()).length
+        : 0;
+
+    document.getElementById("onlineCount").textContent = jumlah;
+});
+
+
 </script>
 </body>
 </html>

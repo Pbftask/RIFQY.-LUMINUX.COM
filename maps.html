@@ -424,7 +424,32 @@
     color:#d0d0d0;
     font-size:15px;
 }
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+  background:white;
+  border:1px solid #4e4e4e;
+  border-radius: 20px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
   
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
+
+
 </style>
 </head>
 <body>
@@ -462,6 +487,9 @@
     </div>
     <div id="searchResults"></div>
     <div id="searchEmpty">Tidak ada tempat yang cocok.</div>
+          <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
   </div>
 
   <!-- ============================ KONTROL MENGAMBANG ============================ -->
@@ -526,6 +554,9 @@
        MODUL FIREBASE (ES Module dari CDN resmi Google — hanya SDK, tanpa
        aset/logo/data Google Maps). Ganti firebaseConfig sesuai proyek Anda.
        ===================================================================== -->
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script type="module">
 
 const loading = document.getElementById("loading-screen");
@@ -570,11 +601,25 @@ function delay(ms){
 prepareApp();
     
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, onSnapshot,
-      doc, updateDoc, deleteDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     /* -------------------------------------------------------------------
        1. KONFIGURASI FIREBASE — bagian ini mudah diganti sesuai proyek
        ------------------------------------------------------------------- */
@@ -591,6 +636,7 @@ prepareApp();
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
     const placesCol = collection(db, "places");
+    const rtdb = getDatabase(app);
 
     /* -------------------------------------------------------------------
        2. IDENTITAS PEMILIK (tanpa login) — disimpan di localStorage agar
@@ -1231,7 +1277,25 @@ prepareApp();
 
 }
 
+// ================= ONLINE USER =================
 
+let userId = localStorage.getItem("ufn_user_id");
+
+if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("ufn_user_id", userId);
+}
+
+const userRef = ref(rtdb, "online/" + userId);
+
+set(userRef, true);
+
+onDisconnect(userRef).remove();
+
+onValue(ref(rtdb, "online"), (snapshot) => {
+    document.getElementById("onlineCount").textContent =
+        snapshot.exists() ? snapshot.size ?? Object.keys(snapshot.val()).length : 0;
+});
   </script>
 </body>
 </html>
