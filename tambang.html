@@ -1068,7 +1068,7 @@ if(now - (playerData.lastSalary || 0) >= 86400000){
 // ==========================
 // Pajak tiap 5 menit (termasuk offline)
 // ==========================
-const interval = 300000; // 5 menit
+const interval = 3600000; // 1 jam
 const lastTax = playerData.lastTax || now;
 const maxTimes = 288; // Maksimal 24 jam offline
 
