@@ -639,6 +639,54 @@ import {
     const rtdb = getDatabase(app);
 
     /* -------------------------------------------------------------------
+       1b. FILTER KATA KOTOR / TIDAK PANTAS
+           - Menolak input yang mengandung kata terlarang (saat tambah/edit)
+           - Menghapus otomatis dari Firestore jika ada dokumen yang lolos
+             (misalnya dibuat lewat cara lain di luar form ini)
+       ------------------------------------------------------------------- */
+    const BANNED_WORDS = [
+      "rusdi", "muani",
+      // Tambahkan kata lain di sini, huruf kecil semua, satu kata per elemen:
+      "anjing", "anjir", "bangsat", "bajingan", "brengsek", "kontol", "memek",
+      "ngentot", "goblok", "tolol", "kampret", "keparat", "pepek", "peler",
+      "jancok", "jancuk", "asu", "babi", "sialan", "kimak", "puki", "pukimak",
+      "lonte", "pelacur", "bencong", "banci", "tai", "monyet"
+    ];
+
+    // Normalisasi: huruf kecil, ganti angka/simbol mirip huruf (leetspeak),
+    // lalu buang semua karakter selain huruf agar "r.u.s.d.i" / "ru5di" tetap kedeteksi
+    function normalizeForFilter(str){
+      return str
+        .toLowerCase()
+        .replace(/4/g, "a").replace(/8/g, "b").replace(/3/g, "e")
+        .replace(/1|!/g, "i").replace(/0/g, "o").replace(/5|\$/g, "s")
+        .replace(/7/g, "t")
+        .replace(/[^a-z]/g, "");
+    }
+
+    function containsProfanity(text){
+      const normalized = normalizeForFilter(text);
+      if (!normalized) return false;
+      return BANNED_WORDS.some(word => normalized.includes(word));
+    }
+
+    // Hapus dokumen "places" yang namanya mengandung kata terlarang.
+    // Dipakai sebagai jaring pengaman kedua (defense in depth) di listener realtime,
+    // untuk kasus data masuk lewat jalur lain di luar form tambah/edit ini.
+    async function purgeIfProfane(place){
+      if (containsProfanity(place.name)){
+        try{
+          await deleteDoc(doc(db, "places", place.id));
+          showToast(`Nama tidak pantas terdeteksi & dihapus otomatis`);
+        } catch(err){
+          console.error("Gagal menghapus otomatis:", err);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    /* -------------------------------------------------------------------
        2. IDENTITAS PEMILIK (tanpa login) — disimpan di localStorage agar
           setiap browser punya "ownerId" tetap, sehingga hanya pembuat
           marker yang bisa mengubah/menghapusnya.
@@ -962,6 +1010,7 @@ import {
     confirmAdd.addEventListener("click", async () => {
       const name = addName.value.trim();
       if (!name){ showToast("Nama tempat tidak boleh kosong"); return; }
+      if (containsProfanity(name)){ showToast("Nama mengandung kata yang tidak pantas"); return; }
       if (!pendingAddPoint){ closeAddForm(); return; }
 
       confirmAdd.disabled = true;
@@ -1036,6 +1085,13 @@ import {
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const place = { id:docSnap.id, ...data };
+
+        // Cek & hapus otomatis jika nama mengandung kata terlarang
+        if (containsProfanity(place.name)){
+          purgeIfProfane(place);
+          return; // jangan render/masukkan ke cache, sedang dalam proses hapus
+        }
+
         list.push(place);
         ids.add(place.id);
         renderMarker(place);
@@ -1107,6 +1163,7 @@ import {
     btnSaveEdit.addEventListener("click", async () => {
       const newName = infoEditInput.value.trim();
       if (!newName){ showToast("Nama tidak boleh kosong"); return; }
+      if (containsProfanity(newName)){ showToast("Nama mengandung kata yang tidak pantas"); return; }
       try{
         await updateDoc(doc(db, "places", selectedId), { name:newName });
         showToast("Nama berhasil diperbarui");
