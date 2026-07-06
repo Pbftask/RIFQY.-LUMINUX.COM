@@ -27,6 +27,14 @@
   --coal-dim:#3c4a8a;
   --nickel:#3fe0a5;
   --nickel-dim:#1f7a58;
+  --uranium:#baff2e;
+  --uranium-dim:#6a8a15;
+  --tembaga:#ff8a4c;
+  --tembaga-dim:#8a4a24;
+  --perak:#cfd6e4;
+  --perak-dim:#6b7280;
+  --minyak:#c98f4f;
+  --minyak-dim:#5c4425;
 
   --text-0:#eef1f6;
   --text-1:#aab2c5;
@@ -233,6 +241,10 @@ input,select{font-family:inherit;}
 .mine-card.gold{background:linear-gradient(150deg, rgba(240,185,59,0.09), var(--panel) 60%);}
 .mine-card.coal{background:linear-gradient(150deg, rgba(108,139,255,0.09), var(--panel) 60%);}
 .mine-card.nickel{background:linear-gradient(150deg, rgba(63,224,165,0.09), var(--panel) 60%);}
+.mine-card.uranium{background:linear-gradient(150deg, rgba(186,255,46,0.09), var(--panel) 60%);}
+.mine-card.tembaga{background:linear-gradient(150deg, rgba(255,138,76,0.09), var(--panel) 60%);}
+.mine-card.perak{background:linear-gradient(150deg, rgba(207,214,228,0.09), var(--panel) 60%);}
+.mine-card.minyak{background:linear-gradient(150deg, rgba(201,143,79,0.09), var(--panel) 60%);}
 .mine-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
 .mine-id{display:flex; align-items:center; gap:10px;}
 .mine-icon{font-size:26px;}
@@ -263,8 +275,8 @@ input,select{font-family:inherit;}
   padding:9px 12px; border-radius:var(--radius-sm); font-size:13px; outline:none;
 }
 .mkt-toolbar input{flex:1; min-width:120px;}
-.tab-row{display:flex; gap:6px; margin-bottom:14px; background:var(--panel); border-radius:100px; padding:4px; border:1px solid var(--border);}
-.tab-btn{flex:1; text-align:center; padding:9px; border-radius:100px; font-size:12.5px; font-weight:600; color:var(--text-2); background:transparent; border:none; transition:all .2s;}
+.tab-row{display:flex; gap:6px; margin-bottom:14px; background:var(--panel); border-radius:16px; padding:4px; border:1px solid var(--border); flex-wrap:wrap;}
+.tab-btn{flex:1 1 auto; min-width:76px; text-align:center; padding:9px 8px; border-radius:100px; font-size:12px; font-weight:600; color:var(--text-2); background:transparent; border:none; transition:all .2s; white-space:nowrap;}
 .tab-btn.active{background:var(--gold); color:#1a1305;}
 .listing{
   display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border);
@@ -449,7 +461,7 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
   <div class="login-card">
     <div class="login-eyebrow">Simulasi Pertambangan Global</div>
     <div class="login-title">ORECRAFT</div>
-    <div class="login-desc">Dirikan negara pertambanganmu. Kelola tambang emas, batu bara, dan nikel — lalu bersaing di pasar global secara real-time.</div>
+    <div class="login-desc">Dirikan negara pertambanganmu. Kelola tambang emas, batu bara, nikel, uranium, tembaga, perak, dan minyak — lalu bersaing di pasar global secara real-time.</div>
     <label class="field-label">Nama Negara</label>
     <input type="text" id="countryInput" class="field-input" placeholder="cth. Kaltara Union" maxlength="20" autocomplete="off">
     <div class="field-hint" id="countryHint">Minimal 3 karakter, harus unik.</div>
@@ -505,10 +517,8 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
       <div class="hero-lbl">Kekayaan Bersih</div>
       <div class="hero-val mono" id="heroNetWorth">0 T</div>
       <div class="hero-sub"><i class="fa-solid fa-chart-line" style="color:var(--up)"></i> <span id="heroIncomeLine">Pendapatan proyeksi 0 T/Y</span></div>
-      <div class="hero-grid">
-        <div class="hero-mini"><div class="lbl">Emas</div><div class="val mono" id="heroGold">0 t</div></div>
-        <div class="hero-mini"><div class="lbl">Batu Bara</div><div class="val mono" id="heroCoal">0 t</div></div>
-        <div class="hero-mini"><div class="lbl">Nikel</div><div class="val mono" id="heroNickel">0 t</div></div>
+      <div class="hero-grid" id="heroMaterialsGrid"></div>
+      <div class="hero-grid" style="margin-top:10px;">
         <div class="hero-mini"><div class="lbl"><i class="fa-solid fa-users"></i> Online</div><div class="val mono" id="heroOnline">0 negara</div></div>
       </div>
     </div>
@@ -543,6 +553,10 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
       <button class="tab-btn" data-mtab="gold">🥇 Emas</button>
       <button class="tab-btn" data-mtab="coal">⚫ Batu Bara</button>
       <button class="tab-btn" data-mtab="nickel">🟩 Nikel</button>
+      <button class="tab-btn" data-mtab="uranium">☢️ Uranium</button>
+      <button class="tab-btn" data-mtab="tembaga">🟠 Tembaga</button>
+      <button class="tab-btn" data-mtab="perak">⚪ Perak</button>
+      <button class="tab-btn" data-mtab="minyak">🛢️ Minyak</button>
     </div>
     <div class="mkt-toolbar">
       <input type="text" id="mktSearch" placeholder="Cari nama negara...">
@@ -565,6 +579,10 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
       <button class="tab-btn" data-ltab="gold">🥇 Emas</button>
       <button class="tab-btn" data-ltab="coal">⚫ Batu Bara</button>
       <button class="tab-btn" data-ltab="nickel">🟩 Nikel</button>
+      <button class="tab-btn" data-ltab="uranium">☢️ Uranium</button>
+      <button class="tab-btn" data-ltab="tembaga">🟠 Tembaga</button>
+      <button class="tab-btn" data-ltab="perak">⚪ Perak</button>
+      <button class="tab-btn" data-ltab="minyak">🛢️ Minyak</button>
     </div>
     <div id="leaderboardList"></div>
   </div>
@@ -663,6 +681,10 @@ Bayar Gaji
         <option value="gold">🥇 Emas</option>
         <option value="coal">⚫ Batu Bara</option>
         <option value="nickel">🟩 Nikel</option>
+        <option value="uranium">☢️ Uranium</option>
+        <option value="tembaga">🟠 Tembaga</option>
+        <option value="perak">⚪ Perak</option>
+        <option value="minyak">🛢️ Minyak</option>
       </select>
       <div class="field-hint" id="sellStockHint">Stok: 0 t</div>
     </div>
@@ -737,10 +759,15 @@ const db = getDatabase(fbApp);
    CONFIG / STATE
    ========================================================= */
 const MINE_CONFIG = {
-  gold:   { label:"Emas",       icon:"🥇", baseProduction:2, baseCost:50, baseCapacity:50,  min:10, max:26, key:"gold" },
-  coal:   { label:"Batu Bara",  icon:"⚫", baseProduction:5, baseCost:30, baseCapacity:100, min:5,  max:16, key:"coal" },
-  nickel: { label:"Nikel",      icon:"🟩", baseProduction:3, baseCost:40, baseCapacity:70,  min:12, max:29, key:"nickel" }
+  gold:    { label:"Emas",      icon:"🥇",  baseProduction:2, baseCost:50, baseCapacity:50,  min:10, max:26, key:"gold",    color:"#f0b93b" },
+  coal:    { label:"Batu Bara", icon:"⚫",  baseProduction:5, baseCost:30, baseCapacity:100, min:5,  max:16, key:"coal",    color:"#6c8bff" },
+  nickel:  { label:"Nikel",     icon:"🟩",  baseProduction:3, baseCost:40, baseCapacity:70,  min:12, max:29, key:"nickel",  color:"#3fe0a5" },
+  uranium: { label:"Uranium",   icon:"☢️", baseProduction:3, baseCost:45, baseCapacity:65,  min:14, max:32, key:"uranium", color:"#baff2e" },
+  tembaga: { label:"Tembaga",   icon:"🟠",  baseProduction:4, baseCost:38, baseCapacity:75,  min:10, max:24, key:"tembaga", color:"#ff8a4c" },
+  perak:   { label:"Perak",     icon:"⚪",  baseProduction:3, baseCost:42, baseCapacity:70,  min:13, max:27, key:"perak",   color:"#cfd6e4" },
+  minyak:  { label:"Minyak",    icon:"🛢️", baseProduction:4, baseCost:40, baseCapacity:80,  min:11, max:26, key:"minyak",  color:"#c98f4f" }
 };
+const MATERIAL_KEYS = Object.keys(MINE_CONFIG);
 const YEAR_SECONDS = 300;        // 1 game year = 5 minutes real time
 const PRICE_INTERVAL_MS = 60000; // prices can shift roughly every 60s
 const TICK_MS = 2000;
@@ -748,7 +775,7 @@ const TICK_MS = 2000;
 let uid = localStorage.getItem("orecraft_uid") || null;
 let myName = localStorage.getItem("orecraft_name") || null;
 let playerData = null;
-let currentPrices = { gold:{current:15,previous:15}, coal:{current:8,previous:8}, nickel:{current:20,previous:20}, lastUpdate:0 };
+let currentPrices = { gold:{current:15,previous:15}, coal:{current:8,previous:8}, nickel:{current:20,previous:20}, uranium:{current:23,previous:23}, tembaga:{current:17,previous:17}, perak:{current:20,previous:20}, minyak:{current:18,previous:18}, lastUpdate:0 };
 let onlinePlayers = {};
 let marketplaceData = {};
 let allPlayers = {};
@@ -847,11 +874,15 @@ async function handleLogin(){
       lastTax: Date.now(),
       name: name,
       balance: 500,
-      inventory: { gold:0, coal:0, nickel:0 },
+      inventory: { gold:0, coal:0, nickel:0, uranium:0, tembaga:0, perak:0, minyak:0 },
       mines: {
-        gold:   { level:1, lastCollected: now },
-        coal:   { level:1, lastCollected: now },
-        nickel: { level:1, lastCollected: now }
+        gold:    { level:1, lastCollected: now },
+        coal:    { level:1, lastCollected: now },
+        nickel:  { level:1, lastCollected: now },
+        uranium: { level:1, lastCollected: now },
+        tembaga: { level:1, lastCollected: now },
+        perak:   { level:1, lastCollected: now },
+        minyak:  { level:1, lastCollected: now }
       },
       createdAt: now
     };
@@ -980,10 +1011,11 @@ async function maybeUpdatePrices(){
         return curr; // someone else already updated
       }
       const base = curr || {
-        gold:{current:15,previous:15}, coal:{current:8,previous:8}, nickel:{current:20,previous:20}
+        gold:{current:15,previous:15}, coal:{current:8,previous:8}, nickel:{current:20,previous:20},
+        uranium:{current:23,previous:23}, tembaga:{current:17,previous:17}, perak:{current:20,previous:20}, minyak:{current:18,previous:18}
       };
       const updated = { lastUpdate: now };
-      for(const key of ["gold","coal","nickel"]){
+      for(const key of MATERIAL_KEYS){
         const cfg = MINE_CONFIG[key];
         const cur = base[key] ? base[key].current : cfg.min;
         const delta = (Math.random()*0.3 - 0.15) * cur; // +/-15%
@@ -1000,7 +1032,7 @@ function renderTicker(){
   const track = document.getElementById("tickerTrack");
   const items = [];
   for(let rep=0; rep<2; rep++){
-    for(const key of ["gold","coal","nickel"]){
+    for(const key of MATERIAL_KEYS){
       const cfg = MINE_CONFIG[key];
       const p = currentPrices[key] || {current:0, previous:0};
       const up = p.current >= p.previous;
@@ -1027,8 +1059,9 @@ if(playerData && playerData.lastTax == null){
   
     updateWorkerStatus();
     playerData.mines = playerData.mines || {};
-    playerData.inventory = playerData.inventory || {gold:0,coal:0,nickel:0};
-    for(const key of ["gold","coal","nickel"]){
+    playerData.inventory = playerData.inventory || {gold:0,coal:0,nickel:0,uranium:0,tembaga:0,perak:0,minyak:0};
+    for(const key of MATERIAL_KEYS){
+      if(!playerData.inventory[key]) playerData.inventory[key] = 0;
       if(!playerData.mines[key]) playerData.mines[key] = {level:1, lastCollected:Date.now()};
     }
     renderAll();
@@ -1100,7 +1133,7 @@ if(playerData.salaryPaid === false){
 
   const updates = {};
   let changed = false;
-  for(const key of ["gold","coal","nickel"]){
+  for(const key of MATERIAL_KEYS){
     const cfg = MINE_CONFIG[key];
     const mine = playerData.mines[key];
     const level = mine.level || 1;
@@ -1139,7 +1172,7 @@ function recordNetWorthPoint(){
 function computeInventoryValue(){
   if(!playerData) return 0;
   let v = 0;
-  for(const key of ["gold","coal","nickel"]){
+  for(const key of MATERIAL_KEYS){
     const price = currentPrices[key] ? currentPrices[key].current : 0;
     v += (playerData.inventory[key]||0) * price;
   }
@@ -1152,7 +1185,7 @@ function computeNetWorth(){
 function computeTotalProduction(){
   if(!playerData) return 0;
   let total = 0;
-  for(const key of ["gold","coal","nickel"]){
+  for(const key of MATERIAL_KEYS){
     total += MINE_CONFIG[key].baseProduction * (playerData.mines[key].level||1);
   }
   return total;
@@ -1160,7 +1193,7 @@ function computeTotalProduction(){
 function computeProjectedIncome(){
   if(!playerData) return 0;
   let total = 0;
-  for(const key of ["gold","coal","nickel"]){
+  for(const key of MATERIAL_KEYS){
     const prod = MINE_CONFIG[key].baseProduction * (playerData.mines[key].level||1);
     const price = currentPrices[key] ? currentPrices[key].current : 0;
     total += prod * price;
@@ -1186,9 +1219,7 @@ function renderAll(){
 
   document.getElementById("heroNetWorth").textContent = fmtT(netWorth);
   document.getElementById("heroIncomeLine").textContent = "Pendapatan proyeksi " + fmtT(income) + "/Y";
-  document.getElementById("heroGold").textContent = fmtTon(playerData.inventory.gold);
-  document.getElementById("heroCoal").textContent = fmtTon(playerData.inventory.coal);
-  document.getElementById("heroNickel").textContent = fmtTon(playerData.inventory.nickel);
+  renderHeroMaterials();
 
   document.getElementById("statMoney").textContent = fmtT(balance);
   document.getElementById("statAssets").textContent = fmtT(netWorth);
@@ -1199,6 +1230,15 @@ function renderAll(){
   renderDashboardMineSummary();
   renderMarketplace();
   renderLeaderboard();
+}
+
+function renderHeroMaterials(){
+  const container = document.getElementById("heroMaterialsGrid");
+  if(!container) return;
+  container.innerHTML = MATERIAL_KEYS.map(key=>{
+    const cfg = MINE_CONFIG[key];
+    return `<div class="hero-mini"><div class="lbl">${cfg.icon} ${cfg.label}</div><div class="val mono">${fmtTon(playerData.inventory[key]||0)}</div></div>`;
+  }).join("");
 }
 
 function mineProgressPct(key){
@@ -1239,7 +1279,7 @@ function renderMines(){
         <div class="mine-stat"><div class="lbl">Stok Saat Ini</div><div class="val">${fmtTon(inv)}</div></div>
         <div class="mine-stat"><div class="lbl">Biaya Upgrade</div><div class="val">${fmtT(cost)}</div></div>
       </div>
-      <div class="progress-track"><div class="progress-fill" style="width:${pct}%; background:var(--${key==='gold'?'gold':key==='coal'?'coal':'nickel'});"></div></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%; background:${cfg.color};"></div></div>
       <div class="mine-actions">
         <button class="btn-sm" data-quicksell="${key}" ${inv<=0?'disabled':''}><i class="fa-solid fa-coins"></i> Jual ke Pasar</button>
         <button class="btn-sm primary" data-upgrade="${key}" ${!canAfford?'disabled':''}><i class="fa-solid fa-arrow-up"></i> Upgrade</button>
@@ -1266,7 +1306,7 @@ function renderDashboardMineSummary(){
       <div style="font-size:22px;">${cfg.icon}</div>
       <div style="flex:1;">
         <div style="font-weight:600; font-size:13.5px;">${cfg.label} · Lv.${level}</div>
-        <div class="progress-track" style="margin:6px 0 0;"><div class="progress-fill" style="width:${pct}%; background:var(--${key==='gold'?'gold':key==='coal'?'coal':'nickel'});"></div></div>
+        <div class="progress-track" style="margin:6px 0 0;"><div class="progress-fill" style="width:${pct}%; background:${cfg.color};"></div></div>
       </div>
       <div class="mono" style="font-size:13px; font-weight:700;">${fmtTon(prod)}/Y</div>
     </div>`;
@@ -1575,12 +1615,12 @@ function renderLeaderboard(){
     return;
   }
   let list = Object.entries(allPlayers).map(([id,p])=>{
-    p.mines = p.mines||{}; p.inventory = p.inventory||{gold:0,coal:0,nickel:0};
-    for(const k of ["gold","coal","nickel"]) if(!p.mines[k]) p.mines[k]={level:1};
+    p.mines = p.mines||{}; p.inventory = p.inventory||{gold:0,coal:0,nickel:0,uranium:0,tembaga:0,perak:0,minyak:0};
+    for(const k of MATERIAL_KEYS) if(!p.mines[k]) p.mines[k]={level:1};
     let value;
     if(lbFilter==="income"){
       value = (p.balance||0);
-      for(const k of ["gold","coal","nickel"]){
+      for(const k of MATERIAL_KEYS){
         const prod = MINE_CONFIG[k].baseProduction*(p.mines[k].level||1);
         const price = currentPrices[k]?currentPrices[k].current:0;
         value += prod*price;
@@ -1774,7 +1814,7 @@ boot();
   function getTaxIncome() {
     let total = 0;
 
-    for (const key of ["gold","coal","nickel"]) {
+    for (const key of MATERIAL_KEYS) {
         const level = playerData.mines[key].level;
         total += 50 + ((level - 1) * 20);
     }
@@ -1785,7 +1825,7 @@ boot();
   function getSalaryCost(){
     if(!playerData || !playerData.mines) return 150;
     let total = 100; // biaya dasar gaji harian
-    for(const key of ["gold","coal","nickel"]){
+    for(const key of MATERIAL_KEYS){
       const level = (playerData.mines[key] && playerData.mines[key].level) || 1;
       total += (level - 1) * 30;
     }
