@@ -768,6 +768,7 @@ const MINE_CONFIG = {
   minyak:  { label:"Minyak",    icon:"🛢️", baseProduction:4, baseCost:40, baseCapacity:80,  min:11, max:26, key:"minyak",  color:"#c98f4f" }
 };
 const MATERIAL_KEYS = Object.keys(MINE_CONFIG);
+const MAX_LEVEL = 100;
 const YEAR_SECONDS = 300;        // 1 game year = 5 minutes real time
 const PRICE_INTERVAL_MS = 60000; // prices can shift roughly every 60s
 const TICK_MS = 2000;
@@ -1262,14 +1263,15 @@ function renderMines(){
     const cost = upgradeCost(key, level);
     const efficiency = Math.min(100, 60 + level*2);
     const pct = mineProgressPct(key);
-    const canAfford = (playerData.balance||0) >= cost;
+    const isMaxLevel = level >= MAX_LEVEL;
+    const canAfford = !isMaxLevel && (playerData.balance||0) >= cost;
     const inv = playerData.inventory[key] || 0;
     return `
     <div class="mine-card ${key}">
       <div class="mine-top">
         <div class="mine-id">
           <div class="mine-icon">${cfg.icon}</div>
-          <div><div class="mine-name">${cfg.label}</div><div class="mine-lvl">Level ${level} · Efisiensi ${efficiency}%</div></div>
+          <div><div class="mine-name">${cfg.label}</div><div class="mine-lvl">Level ${level}${isMaxLevel?' (MAX)':''} · Efisiensi ${efficiency}%</div></div>
         </div>
         <div class="mine-price-badge ${up?'ticker-up':'ticker-down'}"><i class="fa-solid fa-caret-${up?'up':'down'}"></i> ${fmtT(price)}/t</div>
       </div>
@@ -1277,12 +1279,12 @@ function renderMines(){
         <div class="mine-stat"><div class="lbl">Produksi/Tahun</div><div class="val">${fmtTon(prod)}</div></div>
         <div class="mine-stat"><div class="lbl">Kapasitas</div><div class="val">${fmtTon(capacity)}</div></div>
         <div class="mine-stat"><div class="lbl">Stok Saat Ini</div><div class="val">${fmtTon(inv)}</div></div>
-        <div class="mine-stat"><div class="lbl">Biaya Upgrade</div><div class="val">${fmtT(cost)}</div></div>
+        <div class="mine-stat"><div class="lbl">Biaya Upgrade</div><div class="val">${isMaxLevel?'-':fmtT(cost)}</div></div>
       </div>
       <div class="progress-track"><div class="progress-fill" style="width:${pct}%; background:${cfg.color};"></div></div>
       <div class="mine-actions">
         <button class="btn-sm" data-quicksell="${key}" ${inv<=0?'disabled':''}><i class="fa-solid fa-coins"></i> Jual ke Pasar</button>
-        <button class="btn-sm primary" data-upgrade="${key}" ${!canAfford?'disabled':''}><i class="fa-solid fa-arrow-up"></i> Upgrade</button>
+        <button class="btn-sm primary" data-upgrade="${key}" ${!canAfford?'disabled':''}><i class="fa-solid fa-arrow-up"></i> ${isMaxLevel?'Level Maks':'Upgrade'}</button>
       </div>
     </div>`;
   }).join("");
@@ -1318,6 +1320,10 @@ function renderDashboardMineSummary(){
    ========================================================= */
 async function handleUpgrade(key){
   const level = playerData.mines[key].level || 1;
+  if(level >= MAX_LEVEL){
+    toast("Tambang ini sudah mencapai Level Maksimum (100).", "info", "fa-flag-checkered");
+    return;
+  }
   const cost = upgradeCost(key, level);
   if((playerData.balance||0) < cost){
     toast("Saldo tidak cukup untuk upgrade.", "error", "fa-triangle-exclamation");
@@ -1328,6 +1334,7 @@ async function handleUpgrade(key){
     const result = await runTransaction(playerRef, (curr)=>{
       if(!curr) return curr;
       const lvl = curr.mines[key].level || 1;
+      if(lvl >= MAX_LEVEL) return curr;
       const c = upgradeCost(key, lvl);
       if((curr.balance||0) < c) return curr;
       curr.balance = Math.round((curr.balance - c)*100)/100;
@@ -1338,6 +1345,8 @@ async function handleUpgrade(key){
       await push(ref(db, "history/"+uid), { type:"upgrade", text:`Upgrade tambang ${MINE_CONFIG[key].label} ke Level ${level+1}`, amount:-cost, timestamp:Date.now() });
       toast(`${MINE_CONFIG[key].label} naik ke Level ${level+1}!`, "success", "fa-arrow-up");
       playSound();
+    } else if(level >= MAX_LEVEL){
+      toast("Tambang ini sudah mencapai Level Maksimum (100).", "info", "fa-flag-checkered");
     }
   }catch(e){ console.error(e); toast("Upgrade gagal, coba lagi.", "error", "fa-triangle-exclamation"); }
 }
