@@ -402,6 +402,34 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
   .stat-strip{grid-template-columns:repeat(3,180px); justify-content:flex-start;}
   .page{padding:24px 18px;}
 }
+
+
+  .popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.box{
+    width:300px;
+    background:#222;
+    color:#fff;
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+}
+
+.box button{
+    margin:8px;
+    padding:10px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -414,6 +442,7 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
   <div class="load-title">ORECRAFT</div>
   <div class="load-sub">MEMUAT SIMULASI EKONOMI...</div>
 </div>
+
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" style="display:none;">
@@ -428,9 +457,25 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
     <div class="login-footnote">Data tersimpan otomatis. Sesi tetap aktif di perangkat ini.</div>
   </div>
 </div>
-
+  
 <!-- APP -->
 <div id="app">
+
+  <div id="musicPopup" class="popup">
+  <div class="box">
+    <h2>Musik Latar</h2>
+    <p>Aktifkan musik untuk pengalaman bermain yang lebih seru.<br>
+      music by RIFQY
+    </p>
+
+    <button onclick="playMusic()">Putar Musik</button>
+    <button onclick="closePopup()">Lewati</button>
+  </div>
+</div>
+
+<!-- Audio -->
+<audio id="bgMusic" src="miner.mp3" loop></audio>
+
 
   <div class="ticker-bar">
     <div class="ticker-track" id="tickerTrack"></div>
@@ -1761,6 +1806,16 @@ window.paySalary = paySalary;
         }
     }
 }
+
+  window.playMusic = function () {
+    const music = document.getElementById("bgMusic");
+    music.play();
+    document.getElementById("musicPopup").style.display = "none";
+};
+
+window.closePopup = function () {
+    document.getElementById("musicPopup").style.display = "none";
+};
 </script>
 </body>
 </html>
