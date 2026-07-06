@@ -844,6 +844,7 @@ async function handleLogin(){
     const newPlayer = {
       lastSalary: Date.now(),
       salaryPaid: true,
+      lastTax: Date.now(),
       name: name,
       balance: 500,
       inventory: { gold:0, coal:0, nickel:0 },
@@ -1013,10 +1014,17 @@ function renderTicker(){
    PLAYER DATA LISTENER
    ========================================================= */
 function listenPlayer(){
-onValue(ref(db, "players/" + uid), (snapshot) => {
+onValue(ref(db, "players/" + uid), async (snapshot) => {
 
     playerData = snapshot.val();
 
+if(playerData && playerData.lastTax == null){
+    await update(ref(db,"players/"+uid),{
+        lastTax: Date.now()
+    });
+    playerData.lastTax = Date.now();
+}
+  
     updateWorkerStatus();
     playerData.mines = playerData.mines || {};
     playerData.inventory = playerData.inventory || {gold:0,coal:0,nickel:0};
@@ -1047,13 +1055,43 @@ async function gameTick(){
   if(!playerData) return;
   const now = Date.now();
 
-  // Setiap 24 jam sejak gaji terakhir dibayar, status gaji direset jadi "belum dibayar"
-  if(now - (playerData.lastSalary || 0) >= 86400000){
+if(now - (playerData.lastSalary || 0) >= 86400000){
     if(playerData.salaryPaid !== false){
-      await update(ref(db,"players/"+uid),{ salaryPaid:false });
-      toast("💼 Waktunya membayar gaji penambang!","error","fa-users");
+        await update(ref(db,"players/"+uid),{
+            salaryPaid:false
+        });
+
+        toast("💼 Waktunya membayar gaji penambang!","error","fa-users");
     }
-  }
+}
+
+// ==========================
+// Pajak tiap 5 menit (termasuk offline)
+// ==========================
+const interval = 300000; // 5 menit
+const lastTax = playerData.lastTax || now;
+const maxTimes = 288; // Maksimal 24 jam offline
+
+const times = Math.min(
+    Math.floor((now - lastTax) / interval),
+    maxTimes
+);
+  
+if(times > 0){
+    const income = times * getTaxIncome();
+
+    await update(ref(db,"players/"+uid),{
+        balance: (playerData.balance || 0) + income,
+        lastTax: lastTax + (times * interval)
+    });
+
+    toast("🏛 Pajak +" + formatNumber(income) + "T","success","fa-coins");
+}
+
+// Selama gaji belum dibayar
+if(playerData.salaryPaid === false){
+    return;
+}
 
   // Selama gaji belum dibayar, penambang mogok: tidak ada produksi tambang
   if(playerData.salaryPaid === false){
