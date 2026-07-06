@@ -626,7 +626,7 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
     <div class="login-footnote" style="margin-top:20px;">ORECRAFT v1.0 · Ditenagai Realtime Database</div>
     <button class="btn-primary" onclick="claimDailyReward()">
     <i class="fa-solid fa-gift"></i>
-    Klaim Hadiah Harian (200T)
+    Klaim Hadiah Harian (300T)
 </button>
 
     <button onclick="paySalary()" class="btn-primary" id="paySalaryBtn">
@@ -1709,7 +1709,7 @@ function escapeHtml(str){
 
 boot();
 
-  const DAILY_REWARD = 200; // 200T
+  const DAILY_REWARD = 300; // 200T
 
   async function claimDailyReward() {
     const now = Date.now();
@@ -1729,7 +1729,7 @@ boot();
         lastDailyClaim: now
     });
 
-    toast("🎁 Hadiah harian +200T berhasil diklaim!", "success", "fa-gift");
+    toast("🎁 Hadiah harian +300T berhasil diklaim!", "success", "fa-gift");
 }
   window.claimDailyReward = claimDailyReward;
 
