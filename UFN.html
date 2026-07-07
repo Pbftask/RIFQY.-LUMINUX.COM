@@ -102,6 +102,27 @@ footer{
   margin-left:125px;
   margin-top:2px;
 }
+
+.enve{
+  position:relative;
+}
+
+.badge{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  background:#ef4444;
+  color:#fff;
+  font-size:11px;
+  font-weight:bold;
+  min-width:18px;
+  height:18px;
+  border-radius:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 4px;
+}
 </style>
 
 </head>
@@ -158,6 +179,14 @@ footer{
             <i class="fa-solid fa-helmet-safety"></i>
         </a>
         <span>tambang</span>
+    </div>
+
+    <div class="enve">
+        <a href="Inbox.html">
+            <i class="fa-solid fa-envelope"></i>
+        </a>
+        <span>Inbox</span>
+        <div class="badge" id="inboxBadge" style="display:none;">0</div>
     </div>
 
 </div>
@@ -219,6 +248,24 @@ db.ref("online").on("value", function(snapshot) {
   const el = document.getElementById("onlineCount");
   if (el) {
     el.textContent = jumlah;
+  }
+});
+
+// =====================
+// Badge Inbox (pesan belum dibaca)
+// =====================
+const lastRead = parseInt(localStorage.getItem("ufn_last_read") || "0");
+
+db.ref("messages").orderByChild("time").startAfter(lastRead).on("value", function(snapshot) {
+  const jumlahBelumDibaca = snapshot.numChildren();
+  const badge = document.getElementById("inboxBadge");
+  if (badge) {
+    if (jumlahBelumDibaca > 0) {
+      badge.textContent = jumlahBelumDibaca > 99 ? "99+" : jumlahBelumDibaca;
+      badge.style.display = "flex";
+    } else {
+      badge.style.display = "none";
+    }
   }
 });
 </script>
