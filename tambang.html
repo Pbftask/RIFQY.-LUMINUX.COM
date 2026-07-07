@@ -551,9 +551,7 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
     </div>
     <div class="card" id="dashRecentHistory"><div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>Belum ada aktivitas.</p></div></div>
   </div>
-    <div style="text-align:center; margin-top:12px;">
-      <button class="admin-link-btn" id="adminAccessBtn"><i class="fa-solid fa-lock"></i> DATABASE</button>
-    </div>
+
   <!-- TAMBANG -->
   <div class="page" id="page-tambang">
     <div class="section-head">
@@ -672,6 +670,9 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
     </div>
 
     <div class="login-footnote" style="margin-top:20px;">ORECRAFT v1.0 · Ditenagai Realtime Database</div>
+    <div style="text-align:center; margin-top:12px;">
+      <button class="admin-link-btn" id="adminAccessBtn"><i class="fa-solid fa-lock"></i> Panel Admin</button>
+    </div>
     <button class="btn-primary" onclick="claimDailyReward()">
     <i class="fa-solid fa-gift"></i>
     Klaim Hadiah Harian (300T)
@@ -849,6 +850,11 @@ const TICK_MS = 2000;
 
 let uid = localStorage.getItem("orecraft_uid") || null;
 let myName = localStorage.getItem("orecraft_name") || null;
+let deviceId = localStorage.getItem("orecraft_device_id") || null;
+if(!deviceId){
+  deviceId = (Date.now().toString(36) + Math.random().toString(36).slice(2)).toUpperCase();
+  localStorage.setItem("orecraft_device_id", deviceId);
+}
 let playerData = null;
 let currentPrices = { gold:{current:15,previous:15}, coal:{current:8,previous:8}, nickel:{current:20,previous:20}, uranium:{current:23,previous:23}, tembaga:{current:17,previous:17}, perak:{current:20,previous:20}, minyak:{current:18,previous:18}, lastUpdate:0 };
 let onlinePlayers = {};
@@ -1873,7 +1879,7 @@ function escapeHtml(str){
    REDEEM CODE (PLAYER) + ADMIN PANEL
    ========================================================= */
 // GANTI kata sandi ini dengan milik Anda sendiri sebelum publish.
-const ADMIN_PASSWORD = "ff@123456";
+const ADMIN_PASSWORD = "orecraft-admin-2026";
 const ADMIN_SESSION_KEY = "orecraft_admin_auth";
 let admCodesCache = {};
 let admCodesUnsub = false;
@@ -2051,26 +2057,32 @@ async function handleRedeemCode(){
     const result = await runTransaction(codeRef, (data)=>{
       if(data === null){
         failReason = "notfound";
-        return data; // abort, no change
+        return; // abort transaksi (harus return undefined, bukan data)
       }
       if(data.active === false){
         failReason = "inactive";
-        return data;
+        return;
       }
       const used = data.usedCount || 0;
       const limit = data.limit || 1;
       if(used >= limit){
         failReason = "limit";
-        return data;
+        return;
       }
       if(data.usedBy && data.usedBy[uid]){
         failReason = "already";
-        return data;
+        return;
+      }
+      if(data.usedByDevice && data.usedByDevice[deviceId]){
+        failReason = "already";
+        return;
       }
       failReason = null;
       data.usedCount = used + 1;
       if(!data.usedBy) data.usedBy = {};
       data.usedBy[uid] = true;
+      if(!data.usedByDevice) data.usedByDevice = {};
+      data.usedByDevice[deviceId] = true;
       return data;
     });
 
@@ -2110,6 +2122,12 @@ async function handleRedeemCode(){
       amount: rewardSaldo,
       timestamp: Date.now()
     });
+
+    // Kalau limit penggunaan sudah tercapai, hapus otomatis kodenya dari database
+    const limitReached = (codeData.usedCount || 0) >= (codeData.limit || 1);
+    if(limitReached){
+      remove(codeRef).catch(()=>{});
+    }
 
     hint.textContent = `Berhasil! ${rewardTextParts.join(", ")}`;
     hint.className = "field-hint ok";
