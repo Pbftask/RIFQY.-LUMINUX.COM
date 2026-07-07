@@ -449,10 +449,98 @@
   margin-top:2px;
 }
 
+/* ===========================
+   LOGIN SCREEN (nama negara)
+=========================== */
+#loginScreen{
+    position:fixed;
+    inset:0;
+    background:#111827;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:1000000;
+    padding:20px;
+    pointer-events:all;
+}
+#loginScreen.hide{ display:none; }
+.login-box{
+    width:100%;
+    max-width:340px;
+    background:#1a2233;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px;
+    padding:26px 22px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    text-align:center;
+}
+.login-box .login-icon{
+    width:52px; height:52px; margin:0 auto 14px;
+    border-radius:50%;
+    background:#4f46e5;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:22px; font-weight:700;
+}
+.login-box h2{
+    color:#fff;
+    font-size:19px;
+    margin-bottom:6px;
+}
+.login-box p{
+    color:#9aa2ba;
+    font-size:13px;
+    margin-bottom:18px;
+    line-height:1.5;
+}
+.login-box input{
+    width:100%;
+    padding:11px 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:#0f1522;
+    color:#fff;
+    font-size:15px;
+    outline:none;
+    margin-bottom:10px;
+    font-family:var(--font);
+    text-align:center;
+}
+.login-box input:focus{ border-color:#4f46e5; }
+.login-box .login-err{
+    color:#f87171;
+    font-size:12px;
+    min-height:16px;
+    margin-bottom:6px;
+}
+.login-box button{
+    width:100%;
+    padding:11px 0;
+    border-radius:12px;
+    border:none;
+    background:#4f46e5;
+    color:#fff;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:var(--font);
+}
+.login-box button:active{ transform:scale(.97); }
 
 </style>
 </head>
 <body>
+
+  <!-- Login (wajib isi nama negara sebelum masuk, sekali saja) -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <div class="login-icon">🌍</div>
+      <h2>Masuk ke Peta</h2>
+      <p>Masukkan nama negara Anda terlebih dahulu.<br/>Nama ini akan dipakai untuk menandai siapa yang menambahkan tempat, dan <strong>tidak bisa diubah lagi</strong> setelah masuk.</p>
+      <input id="loginCountry" type="text" placeholder="Nama negara" maxlength="40" autocomplete="off" />
+      <div class="login-err" id="loginError"></div>
+      <button id="loginBtn">Masuk</button>
+    </div>
+  </div>
 
   <!-- Loading -->
 <div id="loading-screen">
@@ -566,6 +654,60 @@ const text = document.getElementById("loadingText");
 document.body.style.pointerEvents = "none";
 loading.style.pointerEvents = "all";
 
+/* ---------------------------------------------------------------------
+   LOGIN NAMA NEGARA — wajib diisi sekali, lalu tidak bisa diubah lagi
+   (disimpan permanen di localStorage perangkat ini, seperti sesi login)
+   --------------------------------------------------------------------- */
+const USER_COUNTRY_KEY = "mapUserCountry";
+const loginScreen  = document.getElementById("loginScreen");
+const loginInput   = document.getElementById("loginCountry");
+const loginError   = document.getElementById("loginError");
+const loginBtn     = document.getElementById("loginBtn");
+loginScreen.style.pointerEvents = "all";
+
+function getUserCountry(){
+  return localStorage.getItem(USER_COUNTRY_KEY);
+}
+
+function startAppFlow(){
+  loading.style.pointerEvents = "all";
+  prepareApp();
+}
+
+if (getUserCountry()){
+  // Sudah pernah mengisi nama negara sebelumnya di perangkat ini
+  loginScreen.classList.add("hide");
+  startAppFlow();
+} else {
+  // Belum pernah login — tampilkan form, tunda pemuatan peta
+  loginScreen.classList.remove("hide");
+  loginInput.focus();
+}
+
+function submitLogin(){
+  const val = loginInput.value.trim();
+  if (!val){
+    loginError.textContent = "Nama negara tidak boleh kosong";
+    return;
+  }
+  if (val.length < 2){
+    loginError.textContent = "Nama negara terlalu pendek";
+    return;
+  }
+  if (containsProfanity(val)){
+    loginError.textContent = "Nama mengandung kata yang tidak pantas";
+    return;
+  }
+  localStorage.setItem(USER_COUNTRY_KEY, val);
+  loginScreen.classList.add("hide");
+  startAppFlow();
+}
+
+loginBtn.addEventListener("click", submitLogin);
+loginInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") submitLogin();
+});
+
 async function prepareApp(){
 
     text.textContent = "Memuat gambar...";
@@ -598,8 +740,6 @@ function delay(ms){
     return new Promise(resolve=>setTimeout(resolve,ms));
 }
 
-prepareApp();
-    
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
@@ -1024,7 +1164,8 @@ import {
           x: pendingAddPoint.xFrac,        // koordinat X (fraksi 0..1)
           y: pendingAddPoint.yFrac,        // koordinat Y (fraksi 0..1)
           createdAt: serverTimestamp(),
-          ownerId: OWNER_ID
+          ownerId: OWNER_ID,
+          ownerCountry: getUserCountry() || "Tidak diketahui"
         });
         showToast(`"${name}" berhasil ditambahkan`);
         closeAddForm();
@@ -1129,7 +1270,7 @@ import {
       infoDot.style.background = place.type === "negara" ? "var(--accent)" : "var(--accent-2)";
       infoName.textContent = place.name;
       infoType.textContent = place.type === "negara" ? "Negara" : "Provinsi";
-      infoMeta.textContent = "Dibuat " + formatDate(place.createdAt);
+      infoMeta.textContent = "Dibuat " + formatDate(place.createdAt) + " oleh " + (place.ownerCountry || "Tidak diketahui");
 
       const isOwner = place.ownerId === OWNER_ID;
       infoActionsView.style.display = isOwner ? "flex" : "none";
