@@ -320,6 +320,21 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
 .profile-name{font-family:var(--font-display); font-weight:700; font-size:22px;}
 .profile-joined{font-size:12px; color:var(--text-2); margin-top:4px;}
 
+/* Clickable rows -> view profile */
+.lb-row.clickable, .online-row.clickable{cursor:pointer; transition:background .15s, transform .15s;}
+.lb-row.clickable:hover, .online-row.clickable:hover{background:var(--panel-2); transform:translateY(-1px);}
+
+/* View Profile Modal */
+.vp-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0;}
+.vp-stat{background:var(--bg-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px;}
+.vp-stat .lbl{font-size:10px; color:var(--text-2); letter-spacing:0.06em; text-transform:uppercase;}
+.vp-stat .val{font-family:var(--font-mono); font-weight:700; font-size:15px; margin-top:2px;}
+.vp-mines{display:flex; flex-direction:column; gap:8px;}
+.vp-mine-row{display:flex; align-items:center; gap:10px; background:var(--bg-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px;}
+.vp-mine-row i{width:18px; text-align:center;}
+.vp-mine-row .vp-mine-name{flex:1; font-size:13px; font-weight:600;}
+.vp-mine-row .vp-mine-level{font-family:var(--font-mono); font-size:12.5px; color:var(--text-1);}
+
 /* History */
 .hist-row{display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--border);}
 .hist-row:last-child{border-bottom:none;}
@@ -733,6 +748,24 @@ Bayar Gaji
   </div>
 </div>
 
+<!-- VIEW PLAYER PROFILE MODAL -->
+<div class="modal-overlay" id="viewProfileModal">
+  <div class="modal-sheet">
+    <div class="modal-head"><div class="modal-title">Profil Negara</div><button class="modal-close" data-close="viewProfileModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="card profile-hero" style="margin-bottom:14px;">
+      <div class="profile-avatar" id="vpAvatar">?</div>
+      <div class="profile-name" id="vpName">-</div>
+      <div class="profile-joined" id="vpJoined">Bergabung -</div>
+    </div>
+    <div class="vp-stats">
+      <div class="vp-stat"><div class="lbl">Saldo</div><div class="val" id="vpBalance">0 T</div></div>
+      <div class="vp-stat"><div class="lbl">Kekayaan Bersih</div><div class="val" id="vpNetWorth">0 T</div></div>
+    </div>
+    <div class="section-sub" style="margin-bottom:8px;">Tambang</div>
+    <div class="vp-mines" id="vpMines"></div>
+  </div>
+</div>
+
 <script type="module">
 /* =========================================================
    FIREBASE INIT
@@ -962,7 +995,7 @@ function setupPresence(){
 }
 
 function renderOnlineList(){
-  const list = Object.values(onlinePlayers);
+  const list = Object.entries(onlinePlayers).map(([id,p])=>({id, ...p}));
   document.getElementById("heroOnline").textContent = list.length + " negara";
   document.getElementById("onlineCountLabel").textContent = list.length;
   const container = document.getElementById("onlineList");
@@ -971,12 +1004,15 @@ function renderOnlineList(){
     return;
   }
   container.innerHTML = list.sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(p=>`
-    <div class="online-row">
+    <div class="online-row clickable" data-pid="${p.id}">
       <div class="online-dot on"></div>
       <div class="online-name">${escapeHtml(p.name)}</div>
       <div class="online-status">Online</div>
     </div>
   `).join("");
+  container.querySelectorAll(".online-row[data-pid]").forEach(row=>{
+    row.addEventListener("click", ()=>openPlayerProfile(row.getAttribute("data-pid")));
+  });
 }
 
 /* =========================================================
@@ -1646,13 +1682,61 @@ function renderLeaderboard(){
     const rank = i+1;
     const rankClass = rank===1?"top1":rank===2?"top2":rank===3?"top3":"";
     const valStr = lbFilter==="income" ? fmtT(p.value) : fmtTon(p.value);
-    return `<div class="lb-row">
+    return `<div class="lb-row clickable" data-pid="${p.id}">
       <div class="lb-rank ${rankClass}">${rank}</div>
       <div class="lb-name">${escapeHtml(p.name)}${p.id===uid?'<span class="you">ANDA</span>':''}</div>
       <div class="lb-val">${valStr}</div>
     </div>`;
   }).join("");
+  container.querySelectorAll(".lb-row[data-pid]").forEach(row=>{
+    row.addEventListener("click", ()=>openPlayerProfile(row.getAttribute("data-pid")));
+  });
 }
+
+/* =========================================================
+   VIEW PLAYER PROFILE (other players)
+   ========================================================= */
+function openPlayerProfile(id){
+  if(!id) return;
+  let p = allPlayers[id];
+  if(!p){
+    toast("Data pemain tidak ditemukan.", "error", "fa-user-slash");
+    return;
+  }
+  p.mines = p.mines || {};
+  p.inventory = p.inventory || {gold:0,coal:0,nickel:0,uranium:0,tembaga:0,perak:0,minyak:0};
+  for(const k of MATERIAL_KEYS) if(!p.mines[k]) p.mines[k] = {level:1};
+
+  const name = p.name || "???";
+  document.getElementById("vpAvatar").textContent = name.slice(0,2).toUpperCase();
+  document.getElementById("vpName").textContent = name + (id===uid ? " (Anda)" : "");
+  document.getElementById("vpJoined").textContent = p.createdAt
+    ? "Bergabung " + new Date(p.createdAt).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})
+    : "Bergabung -";
+
+  document.getElementById("vpBalance").textContent = fmtT(p.balance||0);
+
+  let netWorth = p.balance || 0;
+  for(const k of MATERIAL_KEYS){
+    const prod = MINE_CONFIG[k].baseProduction*(p.mines[k].level||1);
+    const price = currentPrices[k] ? currentPrices[k].current : 0;
+    netWorth += prod*price;
+  }
+  document.getElementById("vpNetWorth").textContent = fmtT(netWorth);
+
+  document.getElementById("vpMines").innerHTML = MATERIAL_KEYS.map(k=>{
+    const cfg = MINE_CONFIG[k];
+    const level = p.mines[k].level || 1;
+    return `<div class="vp-mine-row">
+      <i class="fa-solid ${cfg.icon}" style="color:${cfg.color};"></i>
+      <div class="vp-mine-name">${cfg.label}</div>
+      <div class="vp-mine-level">Level ${level}</div>
+    </div>`;
+  }).join("");
+
+  openModal("viewProfileModal");
+}
+window.openPlayerProfile = openPlayerProfile;
 
 /* =========================================================
    HISTORY
