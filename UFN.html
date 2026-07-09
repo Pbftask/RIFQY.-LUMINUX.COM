@@ -4,270 +4,174 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>UFN</title>
+<title>Halaman Ditutup</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial,sans-serif;
+    font-family:'Poppins',sans-serif;
 }
 
 body{
-    background:#0f172a;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    background:linear-gradient(135deg,#07111f,#0f1f38,#142b4d);
     color:#fff;
 }
 
-header{
-    padding:18px;
-    text-align:center;
-    border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-header h2{
-    font-size:22px;
-}
-
-header p{
-    color:#9ca3af;
-    margin-top:4px;
-    font-size:14px;
-}
-
-.lemari{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
-    padding:20px;
-}
-
-.enve{
-    background:#1b2942;
-    border:2px solid #ffc300;
-    border-radius:8px 16px;
-    padding:18px 10px;
-    text-align:center;
-    transition:.2s;
-  }
-
-.enve:active{
-    transform:scale(.96);
-}
-
-.enve a{
-    color:#fff;
-    text-decoration:none;
-    font-size:28px;
-    display:block;
-    width:100%;
-    height:100%;
-}
-
-.enve span{
-    display:block;
-    margin-top:px;
-    font-size:10px;
-    color:#d1d5db;
-}
-
-footer{
+/* Background */
+body::before{
+    content:"";
     position:fixed;
-    bottom:15px;
-    width:100%;
+    inset:-20%;
+    background:
+    radial-gradient(circle,#3b82f655 0%,transparent 35%),
+    radial-gradient(circle,#06b6d455 0%,transparent 30%),
+    radial-gradient(circle,#8b5cf655 0%,transparent 35%);
+    animation:bgMove 18s linear infinite;
+    filter:blur(70px);
+}
+
+@keyframes bgMove{
+    from{transform:rotate(0deg) scale(1);}
+    to{transform:rotate(360deg) scale(1.2);}
+}
+
+/* Card */
+.card{
+    position:relative;
+    z-index:2;
+    width:90%;
+    max-width:430px;
+    padding:35px;
     text-align:center;
-    color:#6b7280;
-    font-size:12px;
+    border-radius:24px;
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.15);
+    box-shadow:0 20px 45px rgba(0,0,0,.35);
+    animation:show .8s ease;
 }
 
-.online-counter{
-  display: flex;
-  flex-direction: row;
-  margin-top:5px;
+@keyframes show{
+    from{
+        opacity:0;
+        transform:translateY(30px) scale(.9);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
 }
 
-.jumlah{
-  margin-left:5px;
-  margin-right: 5px;
-}
-  
-.opin{
-  background:#00ff1d;
-  color:transparent;
-  border-radius:50%;
-  width: 10px;
-  height:10px;
-  margin-left:125px;
-  margin-top:2px;
+/* Icon */
+.icon{
+    font-size:80px;
+    animation:float 3s ease-in-out infinite;
 }
 
-.enve{
-  position:relative;
+.icon img{
+  width: 90%;
 }
 
-.badge{
-  position:absolute;
-  top:-6px;
-  right:-6px;
-  background:#ef4444;
-  color:#fff;
-  font-size:11px;
-  font-weight:bold;
-  min-width:18px;
-  height:18px;
-  border-radius:9px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 4px;
+@keyframes float{
+    0%,100%{
+        transform:translateY(0);
+    }
+    50%{
+        transform:translateY(-10px);
+    }
+}
+
+h1{
+    margin-top:15px;
+    font-size:30px;
+    font-weight:700;
+}
+
+p{
+    margin:15px 0 28px;
+    line-height:1.7;
+    color:#dbeafe;
+    font-size:15px;
+}
+
+button{
+    padding:14px 28px;
+    border:none;
+    border-radius:50px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:600;
+    color:#fff;
+    background:linear-gradient(90deg,#3b82f6,#06b6d4);
+    transition:.3s;
+}
+
+button:hover{
+    transform:translateY(-3px) scale(1.05);
+    box-shadow:0 0 25px #3b82f688;
+}
+
+/* Loading bar */
+.bar{
+    width:100%;
+    height:5px;
+    background:rgba(255,255,255,.1);
+    border-radius:20px;
+    margin-top:25px;
+    overflow:hidden;
+}
+
+.bar span{
+    display:block;
+    width:35%;
+    height:100%;
+    background:linear-gradient(90deg,#06b6d4,#3b82f6);
+    border-radius:20px;
+    animation:loading 2s linear infinite;
+}
+
+@keyframes loading{
+    from{
+        transform:translateX(-120%);
+    }
+    to{
+        transform:translateX(350%);
+    }
 }
 </style>
-
 </head>
 <body>
 
-<header>
-    <h2>UFN</h2>
-    <p>Menu Utama</p>
-  
-      <div class="online-counter">
-   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
-</div>
-</header>
-
-<div class="lemari">
-
-    <div class="enve">
-        <a href="UNF-donwload.html">
-            <i class="fa-solid fa-clock"></i>
-        </a>
-        <span>Waktu</span>
+<div class="card">
+    <div class="icon">
+      <img src="https://i.ibb.co.com/gMBQB65G/New-Project-53-2-A88-ED6.png" alt="logo">
     </div>
 
-    <div class="enve">
-        <a href="cuaca.html">
-            <i class="fa-solid fa-sun"></i>
-        </a>
-        <span>Cuaca</span>
-    </div>
+    <h1>LuminUX</h1>
 
-    <div class="enve">
-        <a href="berita.html">
-            <i class="fa-solid fa-newspaper"></i>
-        </a>
-        <span>Berita</span>
-    </div>
+    <p>
+        Mohon maaf,aplikasi ini di tutup
+    </p>
 
-    <div class="enve">
-        <a href="maps.html">
-            <i class="fa-solid fa-location-dot"></i>
-        </a>
-        <span>Maps</span>
-    </div>
+    <button onclick="window.location.href='game.html'">
+        main mini game
+    </button>
 
-    <div class="enve">
-        <a href="List.html">
-            <i class="fa-solid fa-list"></i>
-        </a>
-        <span>daftar negara</span>
+    <div class="bar">
+        <span></span>
     </div>
-  
-    <div class="enve">
-        <a href="tambang.html">
-            <i class="fa-solid fa-helmet-safety"></i>
-        </a>
-        <span>tambang</span>
-    </div>
-
-    <div class="enve">
-        <a href="Inbox.html">
-            <i class="fa-solid fa-envelope"></i>
-        </a>
-        <span>Inbox</span>
-        <div class="badge" id="inboxBadge" style="display:none;">0</div>
-    </div>
-
 </div>
 
-<footer>
-    UFN © 2026
-</footer>
-
-
-<!-- Firebase Compat -->
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
-<script>
-// =====================
-// Firebase Config
-// =====================
-const firebaseConfig = {
-  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
-  authDomain: "puki-678bf.firebaseapp.com",
-  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
-  projectId: "puki-678bf",
-  storageBucket: "puki-678bf.firebasestorage.app",
-  messagingSenderId: "343647284151",
-  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
-};
-
-// Inisialisasi Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// =====================
-// ID pengguna tetap
-// =====================
-let userId = localStorage.getItem("ufn_user_id");
-
-if (!userId) {
-  userId = crypto.randomUUID();
-  localStorage.setItem("ufn_user_id", userId);
-}
-
-// =====================
-// Tandai Online
-// =====================
-const userRef = db.ref("online/" + userId);
-
-userRef.set(true);
-
-// Hapus otomatis saat koneksi benar-benar terputus
-userRef.onDisconnect().remove();
-
-// =====================
-// Hitung pengguna online
-// =====================
-db.ref("online").on("value", function(snapshot) {
-  const jumlah = snapshot.numChildren();
-
-  const el = document.getElementById("onlineCount");
-  if (el) {
-    el.textContent = jumlah;
-  }
-});
-
-// =====================
-// Badge Inbox (pesan belum dibaca)
-// =====================
-const lastRead = parseInt(localStorage.getItem("ufn_last_read") || "0");
-
-db.ref("messages").orderByChild("time").startAfter(lastRead).on("value", function(snapshot) {
-  const jumlahBelumDibaca = snapshot.numChildren();
-  const badge = document.getElementById("inboxBadge");
-  if (badge) {
-    if (jumlahBelumDibaca > 0) {
-      badge.textContent = jumlahBelumDibaca > 99 ? "99+" : jumlahBelumDibaca;
-      badge.style.display = "flex";
-    } else {
-      badge.style.display = "none";
-    }
-  }
-});
-</script>
 </body>
 </html>

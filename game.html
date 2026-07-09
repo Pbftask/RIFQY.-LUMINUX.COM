@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe - Mode AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:sans-serif;
+  background:#001f3f;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  padding:20px;
+}
+
+h1{
+  font-size:clamp(1.6rem,5vw,2.2rem);
+  margin-bottom:15px;
+  text-align:center;
+}
+
+.controls{
+  margin-bottom:15px;
+}
+
+select{
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:1rem;
+}
+
+.status{
+  margin:15px 0;
+  font-size:1rem;
+  text-align:center;
+}
+
+.board{
+  width:min(95vw,380px);
+  aspect-ratio:1/1;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.cell{
+  width:100%;
+  aspect-ratio:1/1;
+  font-size:clamp(2rem,12vw,3rem);
+  border:none;
+  border-radius:15px;
+  background:white;
+  color:black;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.cell:active{
+  transform:scale(.95);
+}
+
+.cell:disabled{
+  background:#ddd;
+  cursor:not-allowed;
+}
+
+.restart{
+  margin-top:20px;
+  width:min(95vw,380px);
+  padding:14px;
+  font-size:1rem;
+  border:none;
+  border-radius:12px;
+  background:#007bff;
+  color:white;
+  cursor:pointer;
+}
+
+.restart:active{
+  transform:scale(.98);
+}
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe 🤖</h1>
+  <div class="controls">
+    Mode: 
+    <select id="modeSelect">
+      <option value="easy">Easy</option>
+      <option value="normal">Normal</option>
+      <option value="extreme">Extreme</option>
+    </select>
+  </div>
+
+  <div class="status" id="status">Giliran: X (Kamu)</div>
+  <div class="board" id="board"></div>
+  <button class="restart" onclick="startGame()">Mulai Ulang</button>
+
+  <script>
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    const modeSelect = document.getElementById("modeSelect");
+
+    let cells = [];
+    let board = Array(9).fill("");
+    let gameActive = true;
+    let mode = "easy";
+
+    modeSelect.addEventListener("change", () => {
+      mode = modeSelect.value;
+      startGame();
+    });
+
+    function startGame() {
+      board = Array(9).fill("");
+      boardEl.innerHTML = "";
+      cells = [];
+      gameActive = true;
+      statusEl.textContent = "Giliran: X (Kamu)";
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("button");
+        cell.classList.add("cell");
+        cell.addEventListener("click", () => handlePlayerMove(i));
+        boardEl.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function handlePlayerMove(index) {
+      if (!gameActive || board[index] !== "") return;
+
+      board[index] = "X";
+      cells[index].textContent = "X";
+      cells[index].disabled = true;
+
+      if (checkWinner(board, "X")) {
+        statusEl.textContent = "Kamu Menang! 🎉";
+        gameActive = false;
+        return;
+      }
+
+      if (isBoardFull(board)) {
+        statusEl.textContent = "Seri!";
+        gameActive = false;
+        return;
+      }
+
+      statusEl.textContent = "Giliran: O (AI)";
+      setTimeout(() => {
+        let aiMove;
+        if (mode === "easy") {
+          aiMove = getRandomMove(board);
+        } else if (mode === "normal") {
+          aiMove = getSemiSmartMove(board);
+        } else {
+          aiMove = getBestMove(board);
+        }
+        makeAIMove(aiMove);
+      }, 300);
+    }
+
+    function makeAIMove(index) {
+      if (!gameActive || board[index] !== "") return;
+
+      board[index] = "O";
+      cells[index].textContent = "O";
+      cells[index].disabled = true;
+
+      if (checkWinner(board, "O")) {
+        statusEl.textContent = "Kalah! AI Menang 😈";
+        gameActive = false;
+        return;
+      }
+
+      if (isBoardFull(board)) {
+        statusEl.textContent = "Seri!";
+        gameActive = false;
+        return;
+      }
+
+      statusEl.textContent = "Giliran: X (Kamu)";
+    }
+
+    function getRandomMove(b) {
+      const empty = b.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    function getSemiSmartMove(b) {
+      // Ambil tengah jika kosong
+      if (b[4] === "") return 4;
+      // Ambil pojok jika ada
+      const corners = [0, 2, 6, 8].filter(i => b[i] === "");
+      if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
+      // Kalau tidak, acak saja
+      return getRandomMove(b);
+    }
+
+    function getBestMove(b) {
+      let bestScore = -Infinity;
+      let move = -1;
+      for (let i = 0; i < b.length; i++) {
+        if (b[i] === "") {
+          b[i] = "O";
+          let score = minimax(b, 0, false);
+          b[i] = "";
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+      }
+      return move;
+    }
+
+    function minimax(b, depth, isMaximizing) {
+      if (checkWinner(b, "O")) return 10 - depth;
+      if (checkWinner(b, "X")) return depth - 10;
+      if (isBoardFull(b)) return 0;
+
+      if (isMaximizing) {
+        let maxEval = -Infinity;
+        for (let i = 0; i < b.length; i++) {
+          if (b[i] === "") {
+            b[i] = "O";
+            let eval = minimax(b, depth + 1, false);
+            b[i] = "";
+            maxEval = Math.max(maxEval, eval);
+          }
+        }
+        return maxEval;
+      } else {
+        let minEval = Infinity;
+        for (let i = 0; i < b.length; i++) {
+          if (b[i] === "") {
+            b[i] = "X";
+            let eval = minimax(b, depth + 1, true);
+            b[i] = "";
+            minEval = Math.min(minEval, eval);
+          }
+        }
+        return minEval;
+      }
+    }
+
+    function checkWinner(b, player) {
+      const winCombos = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      return winCombos.some(combo => combo.every(i => b[i] === player));
+    }
+
+    function isBoardFull(b) {
+      return b.every(cell => cell !== "");
+    }
+
+    startGame();
+  </script>
+
+</body>
+</html>
